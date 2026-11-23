@@ -2,7 +2,7 @@ import "./BatteryCard.css";
 import { FC } from "react";
 import { Card } from "react-bootstrap";
 
-const defaultImage = "/DefaultImage.jpg";
+const defaultImage = `${import.meta.env.BASE_URL}DefaultImage.jpg`;
 
 interface Props {
   modelName: string;
@@ -24,9 +24,13 @@ export const BatteryCard: FC<Props> = ({
       <Card.Img
         className="batteryCardImage"
         variant="top"
+        alt={modelName}
         src={imageUrl || defaultImage}
         // битая ссылка из БД/MinIO — тоже показываем изображение по умолчанию
-        onError={(e) => (e.currentTarget.src = defaultImage)}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = defaultImage;
+        }}
       />
       <Card.Body className="batteryCardBody">
         <Card.Title className="batteryCardTitle">{modelName}</Card.Title>

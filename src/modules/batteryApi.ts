@@ -81,11 +81,9 @@ export async function getFeedItem(
   next = false,
 ): Promise<BatteryType | null> {
   if (isMock)
-    return (
-      BATTERY_TYPES_MOCK.find((i) => i.id === id) ??
-      BATTERY_TYPES_MOCK[0] ??
-      null
-    );
+    return id === undefined
+      ? (BATTERY_TYPES_MOCK[0] ?? null)
+      : (BATTERY_TYPES_MOCK.find((i) => i.id === id) ?? null);
   return (await api.get("/battery_type/feed", { params: { id, next } })).data;
 }
 export const batteryTypeError = (e: unknown) =>

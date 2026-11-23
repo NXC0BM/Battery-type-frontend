@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BATTERY_TYPES_MOCK } from "../modules/mock";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   BatteryType,
@@ -94,9 +95,19 @@ export function FeedPage() {
                 {item.likesCount}
               </button>
               <button
-                onClick={() =>
-                  navigate("/battery_type/feed?next=true&step=" + Date.now())
-                }
+                onClick={() => {
+                  if (isMock) {
+                    const index = BATTERY_TYPES_MOCK.findIndex(
+                      (card) => card.id === item.id,
+                    );
+                    const next =
+                      BATTERY_TYPES_MOCK[
+                        (index + 1) % BATTERY_TYPES_MOCK.length
+                      ];
+                    if (next) navigate("/battery_type/feed/" + next.id);
+                  } else
+                    navigate("/battery_type/feed?next=true&step=" + Date.now());
+                }}
               >
                 Далее
               </button>
