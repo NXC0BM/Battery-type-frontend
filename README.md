@@ -1,35 +1,29 @@
-# battery_type — фронтенд ЛР5
+# battery_type — каталог типов аккумуляторов
 
-Отдельное SPA React 18 + TypeScript 5 + Vite 5 + React-Bootstrap 2.
-В ЛР5 доступны плитка и лента на mock-данных. API, Redux и Context не используются.
+Итоговая ветка `battery_type-lab8`: React, TypeScript, Redux Toolkit, Axios, Bootstrap, Three.js, CLIP и PWA.
+Исходная ЛР5 без адаптивности и без API сохранена в `battery_type-lab5`.
 
 ## Запуск
 
-```powershell
-npm ci
-npm run dev -- --host 127.0.0.1 --port 53001
-npm run build
-```
+`npm ci`, затем `npm run dev`. Открыть http://127.0.0.1:53001/#/battery_type . Vite проксирует `/api` на NestJS :53000.
+`npm run build` проверяет TypeScript и создаёт dist. Для mock: установить `VITE_BATTERY_TYPE_MOCK=true` перед сборкой.
 
-## Страницы
+## Страницы и действия
 
-- `/battery_type`: плитка типов аккумуляторов. Поле «Ёмкость от, мА·ч», кнопка «Показать», изображение, модель и лайки. Нажатие открывает `/battery_type/feed/:id`.
-- `/battery_type/feed` и `/battery_type/feed/:id`: лента, видео, описание, ёмкость, напряжение, таблица атрибутов, просмотр лайков и кнопка «Далее».
-- Меню из четырёх пунктов: Лента, Добавление, Плитка, Вход. В ЛР5 активны первые и третий; добавление и вход реализуются в ЛР6.
+Плитка: фильтр ёмкости, пагинация по 24 типа, обновление данных и CLIP-поиск. Лента: модель 3D, атрибуты, лайки и следующий элемент набора Redis. Добавление: один черновик, изображение и GLB/GLTF, публикация ёмкости и напряжения в EAV. Вход: регистрация, Redis-сессия, выход.
 
-Шаблон фиксированной ширины 420 px и минимальной высоты 800 px. Нет @media и размеров, зависящих от viewport; адаптивность относится к ЛР7. Цвет кнопок #FC8507, текст #000000, фон #EEEEEE; текст поверх видео белый для читаемости.
+Redux хранит фильтр, страницу и пользователя; после F5 пользователь в Redux — гость, cookie сессии может сохраняться. Пароли в клиентское хранилище не записываются. В thunk загрузки используется Axios-клиент из Swagger (`src/modules/generated/BatteryTypeApi.ts`).
 
-## Данные и компоненты
+## Дополнительные задания
 
-`modules/mock.ts` — коллекция типов; `batteryApi.ts` — асинхронные функции выборки mock.
-`GridPage` хранит фильтр, список и загрузку в useState. `CapacityFilter` принимает value, setValue, onSubmit, loading через props.
-`FeedPage` хранит тип и список в собственном useState; useEffect загружает их при монтировании и смене id. Кнопка «Далее» идёт по общему порядку типов.
-Маршрутизация: useParams, useNavigate, useLocation. Outlet используется без context.
-`BatteryCard` и `FeedPage` подставляют DefaultImage.jpg и DefaultVideo.mp4, если URL пустой или не загрузился.
+Пагинация получает `items,total,page,limit` от API. Лента Redis — отдельный набор из 100 уникальных id на гостевую/пользовательскую сессию.
+`?next=true` запускает asyncio-задачу. Polling раз в секунду использует постоянный id и `next=false`, поэтому не создаёт новые задачи.
 
-## Поля по теме
+CLIP (`Xenova/clip-vit-base-patch32`, Transformers.js) работает в Web Worker. Веса скачиваются при первом запуске. Изображение не отправляется API. Английские описания берутся из `/api/battery_type/descriptions`; одинаковые подписи индексируются один раз, показывается представитель группы. Метрика S=(1+cosine)/2 в пределах 0–1. Начальные порог 0.63 и TopK 3 выбраны на пробном изображении (0.639, 0.632, 0.625); это не статистическая оценка точности. В интерфейсе порог 0.4–0.9 и TopK 1–20.
 
-Ёмкость — capacityMah (мА·ч); напряжение — nominalVoltageV (В). Фильтр выбирает ёмкость не ниже границы.
-В итоговой БД эти значения хранятся в вертикальной таблице атрибутов; удобные числовые поля JSON формирует бэкенд. В ЛР5 mock повторяет такое представление ответа.
+## Репозитории
 
-Бэкенд: https://github.com/NXC0BM/Battery-type
+- Бэкенд: https://github.com/NXC0BM/Battery-type/tree/battery_type-lab8
+- Mock Pages: https://nxc0bm.github.io/Battery-type-frontend/
+- Tauri: https://github.com/NXC0BM/Battery-type-native
+- Asyncio: https://github.com/NXC0BM/Battery-type-async

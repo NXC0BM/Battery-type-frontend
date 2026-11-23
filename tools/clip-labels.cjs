@@ -1,0 +1,1 @@
+const fs=require('fs');const p='src/components/BatteryTypeImageSearch.tsx';let s=fs.readFileSync(p,'utf8').replace('Косинусное сходство:','Близость (1 + cos) / 2:').replace('Найти аккумулятор по изображению</h2>','Найти аккумулятор по изображению</h2><p>Близость = (1 + cos) / 2. Порог 0,63, TopK 3 — начальные параметры для этого каталога.</p>');fs.writeFileSync(p,s);

@@ -1,13 +1,11 @@
+import axios from "axios";
 import { BATTERY_TYPES_MOCK } from "./mock";
-
-// Доп. характеристика услуги (EAV): атрибут — значение — единица измерения
+import { Api } from "./generated/BatteryTypeApi";
 export interface BatteryAttribute {
   name: string;
   value: string;
   unit?: string | null;
 }
-
-// Тип аккумулятора — поля как в BatteryTypeResponseDto веб-сервиса
 export interface BatteryType {
   id: number;
   modelName: string;
@@ -18,17 +16,79 @@ export interface BatteryType {
   nominalVoltageV: number | null;
   likesCount: number;
   attributes?: BatteryAttribute[];
+  isMine?: number;
+  isLiked?: number;
+  modelUrl?: string | null;
+  shortDescriptionEn?: string | null;
+  rotationX?: number;
+  rotationY?: number;
+  feedPosition?: number;
+  feedBatch?: number;
 }
-
-// В ЛР5 данные берутся только из mock-коллекции, без веб-сервиса, БД и S3.
-// Функции асинхронные, чтобы в ЛР6 заменить тело на запросы к /api/battery_type.
-
-// Список для плитки с фильтром по минимальной ёмкости
-export const getBatteryTypes = async (minCapacityMah = 0): Promise<BatteryType[]> =>
-  BATTERY_TYPES_MOCK.filter((item) => (item.capacityMah ?? 0) >= minCapacityMah);
-
-// Одна карточка для ленты (страница «подробнее») вместе с атрибутами; без id — первая
-export const getFeedItem = async (id?: number): Promise<BatteryType | null> => {
-  if (!id) return BATTERY_TYPES_MOCK[0] ?? null;
-  return BATTERY_TYPES_MOCK.find((item) => item.id === id) ?? null;
-};
+export const isMock = import.meta.env.VITE_BATTERY_TYPE_MOCK === "true";
+export const isNative = import.meta.env.VITE_BATTERY_TYPE_NATIVE === "true";
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_BATTERY_TYPE_API_URL || "/api",
+  withCredentials: true,
+  timeout: 30000,
+});
+export const generated = new Api({
+  baseURL: (import.meta.env.VITE_BATTERY_TYPE_API_URL || "/api").replace(
+    /\/api$/,
+    "",
+  ),
+  withCredentials: !isNative,
+  timeout: 30000,
+});
+export async function getBatteryTypePage(
+  minCapacityMah = 0,
+  page = 1,
+  limit = 24,
+): Promise<{
+  items: BatteryType[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
+  if (isMock) {
+    const all = BATTERY_TYPES_MOCK.filter(
+      (i) => (i.capacityMah ?? 0) >= minCapacityMah,
+    );
+    return {
+      items: all.slice((page - 1) * limit, page * limit),
+      total: all.length,
+      page,
+      limit,
+    };
+  }
+  return (
+    await generated.api.batteryTypeControllerGetList({
+      minCapacityMah,
+      page,
+      limit,
+    })
+  ).data as unknown as {
+    items: BatteryType[];
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+export const getBatteryTypes = async (min = 0) =>
+  (await getBatteryTypePage(min)).items;
+export async function getFeedItem(
+  id?: number,
+  next = false,
+): Promise<BatteryType | null> {
+  if (isMock)
+    return (
+      BATTERY_TYPES_MOCK.find((i) => i.id === id) ??
+      BATTERY_TYPES_MOCK[0] ??
+      null
+    );
+  return (await api.get("/battery_type/feed", { params: { id, next } })).data;
+}
+export const batteryTypeError = (e: unknown) =>
+  axios.isAxiosError(e)
+    ? JSON.stringify(e.response?.data?.message ?? e.message)
+    : String(e);
