@@ -1,7 +1,7 @@
 name: battery_type Pages
 on:
   push:
-    branches: [battery_type-lab8]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
