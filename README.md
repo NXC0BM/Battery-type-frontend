@@ -27,3 +27,6 @@ CLIP (`Xenova/clip-vit-base-patch32`, Transformers.js) работает в Web W
 - Mock Pages: https://nxc0bm.github.io/Battery-type-frontend/
 - Tauri: https://github.com/NXC0BM/Battery-type-native
 - Asyncio: https://github.com/NXC0BM/Battery-type-async
+
+
+Дополнение преподавателя от 25.11: CLIP сравнивает картинку с английским полем БД short_description_en только у карточек текущей страницы пагинации. Текстовые эмбеддинги кэшируются в Redux; изображение вычисляется при каждом поиске. Проверка: tools/verify_clip_redux.cjs в основном репозитории.
